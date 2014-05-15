@@ -50,7 +50,7 @@ class LDMutex extends CApplicationComponent
 			$this->dataFile = Yii::app()->getRuntimePath().DIRECTORY_SEPARATOR.get_class($this).DIRECTORY_SEPARATOR.'mutex.bin';
 		}
 		
-		// If the mutex lock file path is not set generate default path: "dataFile.bin"
+		// If the mutex lock file path is not set generate default path: "application runtime path"/"this class name"/"mutex.bin.lock"
 		if($this->lockFile === null)
 		{
 			$this->lockFile = $this->dataFile.'.lock';
