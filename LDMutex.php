@@ -19,7 +19,7 @@ class LDMutex extends CApplicationComponent
 	/**
 	 * @var integer File permissions for mutex files
 	 */
-	public $permissions = 0700;
+	public $permissions = 0600;
 	
 	/**
 	 * @var string Path to the mutex lock file. If not set defaults to: "dataFile.lock"
