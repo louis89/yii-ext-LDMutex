@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Mutex implementation for Yii.
+ * A mutex implementation for Yii.
  * 
  * @author Louis A. DaPrato <l.daprato@gmail.com>
  *
@@ -10,6 +10,11 @@ class LDMutex extends CApplicationComponent
 {
 	
 	const ID = 'LDMutex';
+	
+	/**
+	 * @var string The category to use for message translations
+	 */
+	public $tCategory = self::ID;
 	
 	/**
 	 * @var integer File permissions for mutex files
@@ -59,18 +64,18 @@ class LDMutex extends CApplicationComponent
 			{
 				if(file_exists($dir))
 				{
-					throw new CException(Yii::t(self::ID, "Invalid mutex directory. The directory '{dir}' exists, but it is not a directory.", array('{dir}' => $dir)));
+					throw new CException(Yii::t($this->tCategory, "Invalid mutex directory. The directory '{dir}' exists, but it is not a directory.", array('{dir}' => $dir)));
 				}
 				else if(mkdir($dir, $this->permissions, true) === false)
 				{
-					throw new CException(Yii::t(self::ID, "The specified mutex directory '{dir}' does not exist and could not be created. Make sure the specified path is valid and the current process has read and write access.", array('{dir}' => $dir)));
+					throw new CException(Yii::t($this->tCategory, "The specified mutex directory '{dir}' does not exist and could not be created. Make sure the specified path is valid and the current process has read and write access.", array('{dir}' => $dir)));
 				}
 			}
 			// Make sure the path exists and is readable/writable
 			$fh = fopen($path, 'c+');
 			if($fh === false)
 			{
-				throw new CException(Yii::t(self::ID, 'Failed to acquire handle on mutex file "{path}". Please make sure that the path is readable and writable by the current process.', array('{path}' => $path)));
+				throw new CException(Yii::t($this->tCategory, 'Failed to acquire handle on mutex file "{path}". Please make sure that the path is readable and writable by the current process.', array('{path}' => $path)));
 			}
 			fclose($fh);
 			chmod($path, $this->permissions);
@@ -92,7 +97,7 @@ class LDMutex extends CApplicationComponent
 		
 		if($lockFileHandle === false)
 		{
-			throw new CException(Yii::t(self::ID, "Failed to open lock file '{path}'. The path might not be writable.", array('{path}' => $this->lockFile)));
+			throw new CException(Yii::t($this->tCategory, "Failed to open lock file '{path}'. The path might not be writable.", array('{path}' => $this->lockFile)));
 		}
 
 		if(@flock($lockFileHandle, LOCK_EX))
@@ -118,7 +123,6 @@ class LDMutex extends CApplicationComponent
 		fclose($lockFileHandle);
 		
 		return isset($result) && $result !== false;
-		
 	}
 	
 	/**
@@ -149,7 +153,7 @@ class LDMutex extends CApplicationComponent
 		{
 			if(($id = array_pop($this->_locks)) === null)
 			{
-				throw new CException(Yii::t(self::ID, "No local lock available that could be released. Make sure to setup a local lock first."));
+				throw new CException(Yii::t($this->tCategory, "No local lock available that could be released. Make sure to setup a local lock first."));
 			}
 		}
 		else if(isset($this->_locks[$id])) // Check if this is a local ID
@@ -160,7 +164,7 @@ class LDMutex extends CApplicationComponent
 			}
 			else
 			{
-				throw new CException(Yii::t(self::ID, "Local lock with ID '{id}' is outside of the current nested lock with ID '{nestedID}'.", array('{id}' => $id, 'nestedID' => end($this->_locks))));
+				throw new CException(Yii::t($this->tCategory, "Local lock with ID '{id}' is outside of the current nested lock with ID '{nestedID}'.", array('{id}' => $id, 'nestedID' => end($this->_locks))));
 			}
 		}
 		
@@ -168,7 +172,7 @@ class LDMutex extends CApplicationComponent
 		
 		if($lockFileHandle === false)
 		{
-			throw new CException(Yii::t(self::ID, "Failed to open lock file '{path}'. The path might not be writable.", array('{path}' => $this->lockFile)));
+			throw new CException(Yii::t($this->tCategory, "Failed to open lock file '{path}'. The path might not be writable.", array('{path}' => $this->lockFile)));
 		}
 
 		if(@flock($lockFileHandle, LOCK_EX))
@@ -185,7 +189,6 @@ class LDMutex extends CApplicationComponent
 		fclose($lockFileHandle);
 		
 		return isset($result) && $result !== false;
-		
 	}
 
 }
