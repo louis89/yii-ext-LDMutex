@@ -13,8 +13,15 @@
 /**
  * A mutex implementation for Yii.
  * 
+ * @property string $tCategory The category to use for message translations
+ * @property integer $filePermission the chmod permission for temporary files generated during parsing. Defaults to 0600 (owner rw, group none and others none).
+ * @property integer $directoryPermission the chmod permission for temporary directories generated during parsing. Defaults to 0700 (owner rwx, group none and others none).
+ * @property string $lockFile Path to the mutex lock file. If not set defaults to: "dataFile.lock"
+ * @property string $dataFile Path to the mutex data file. If not set defaults to: "application runtime path"/"this class name"/"mutex.bin"
+ * 
  * @author Louis A. DaPrato <l.daprato@gmail.com>
- *
+ * @since 1.0
+ * 
  */
 class LDMutex extends CApplicationComponent
 {
@@ -27,9 +34,14 @@ class LDMutex extends CApplicationComponent
 	public $tCategory = self::ID;
 	
 	/**
-	 * @var integer File permissions for mutex files
+	 * @var integer the chmod permission for temporary files generated during parsing. Defaults to 0600 (owner rw, group none and others none).
 	 */
-	public $permissions = 0600;
+	public $filePermission = 0600;
+	
+	/**
+	 * @var integer the chmod permission for temporary directories generated during parsing. Defaults to 0700 (owner rwx, group none and others none).
+	 */
+	public $directoryPermission = 0700;
 	
 	/**
 	 * @var string Path to the mutex lock file. If not set defaults to: "dataFile.lock"
@@ -76,7 +88,7 @@ class LDMutex extends CApplicationComponent
 				{
 					throw new CException(Yii::t($this->tCategory, "Invalid mutex directory. The directory '{dir}' exists, but it is not a directory.", array('{dir}' => $dir)));
 				}
-				else if(mkdir($dir, $this->permissions, true) === false)
+				else if(mkdir($dir, $this->directoryPermission, true) === false)
 				{
 					throw new CException(Yii::t($this->tCategory, "The specified mutex directory '{dir}' does not exist and could not be created. Make sure the specified path is valid and the current process has read and write access.", array('{dir}' => $dir)));
 				}
@@ -88,7 +100,7 @@ class LDMutex extends CApplicationComponent
 				throw new CException(Yii::t($this->tCategory, 'Failed to acquire handle on mutex file "{path}". Please make sure that the path is readable and writable by the current process.', array('{path}' => $path)));
 			}
 			fclose($fh);
-			chmod($path, $this->permissions);
+			chmod($path, $this->filePermission);
 		}
 	}
 	
