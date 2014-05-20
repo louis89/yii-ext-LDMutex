@@ -54,6 +54,13 @@ class LDMutex extends CApplicationComponent
 	public $dataFile;
 	
 	/**
+	 * @var integer The default timeout in microseconds to use on a lock if a value less than 1 is used when acquiring a lock.
+	 * 	Defaults to null meaning use the "max_execution_time" ini setting as the default timeout.
+	 * 	WARNING: If this value is set to an integer less than 1 then locks will never timeout by default.
+	 */
+	public $defaultTimeout;
+	
+	/**
 	 * @var array Local locks (locks initiated during current request/execution).
 	 */
 	private $_locks = array();
@@ -102,6 +109,11 @@ class LDMutex extends CApplicationComponent
 			fclose($fh);
 			chmod($path, $this->filePermission);
 		}
+		// set default timeout to 'max_execution_time' in microseconds if it is not already set
+		if($this->defaultTimeout === null)
+		{
+			$this->defaultTimeout = ini_get('max_execution_time') * 1000000;
+		}
 	}
 	
 	/**
@@ -109,7 +121,9 @@ class LDMutex extends CApplicationComponent
 	 * The lock automatically expires after the value of $timeout microseconds have elapsed or if $timeout <= 0 never expire. 
 	 * 
 	 * @param string $id The identifier of the lock
-	 * @param integer $timeout The time in microseconds from now at which this lock will expire if not unlocked. Defaults to 0 meaning never expire.
+	 * @param integer $timeout The time in microseconds from now at which this lock will expire if not unlocked.
+	 * 	Any value less than 1 will cause the timeout to be set to the value of the {@link LDMutex::timeout} property.
+	 * 	Defaults to 0.
 	 * @throws CException Throws exception if any necessary files cannot be opened, locked, or read.
 	 * @return boolean True if the lock was acquired. False otherwise.
 	 */
@@ -134,7 +148,7 @@ class LDMutex extends CApplicationComponent
 			// If the lock id does not exist or has expired then proceed to acquire it updating its expiration as necessary.
 			if(!isset($data[$id]) || ($data[$id][0] > 0 && $data[$id][0] + $data[$id][1] <= microtime(true)))
 			{
-				$data[$id] = array($timeout, microtime(true));
+				$data[$id] = array($timeout > 0 ? $timeout : $this->defaultTimeout, microtime(true));
 				
 				$this->_locks[$id] = $id;
 				
@@ -151,7 +165,9 @@ class LDMutex extends CApplicationComponent
 	 * Acquires a mutually exclusive lock with the given ID waiting if necessary until the lock becomes available.
 	 * 
 	 * @param string $id The identifier of the lock
-	 * @param integer $timeout The time in microseconds from now at which this lock will expire if not unlocked. Defaults to 0 meaning never expire.
+	 * @param integer $timeout The time in microseconds from now at which this lock will expire if not unlocked.
+	 * 	Any value less than 1 will cause the timeout to be set to the value of the {@link LDMutex::timeout} property.
+	 * 	Defaults to 0.
 	 * @param integer $usleep The time in microseconds to halt execution while waiting for the like to become available.
 	 */
 	public function acquire($id, $timeout = 0, $usleep = 1000)
